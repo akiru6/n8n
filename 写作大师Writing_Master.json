@@ -1,0 +1,541 @@
+{
+  "name": "Writing Master",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message",
+          "callback_query"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -480,
+        -180
+      ],
+      "id": "92c19214-d685-4e68-b595-199ad2d072bc",
+      "name": "Telegram Trigger",
+      "webhookId": "6caa68e7-f1f7-4732-8290-0b9c58ae42b8",
+      "credentials": {
+        "telegramApi": {
+          "id": "qD5rcod7678XHFKV",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "用户在 Telegram 上分享的“最佳实践”信息。其关键是提取信息中的“主题”、“核心论点”和“有说服力的例子”，并将这些关键信息传递给 AI Agent进行学习。",
+        "height": 420,
+        "width": 380
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -300,
+        -280
+      ],
+      "id": "6e8c6722-8b59-4712-9225-cdcb1cab0101",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "model": "=deepseek/deepseek-chat",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.1,
+      "position": [
+        -260,
+        -20
+      ],
+      "id": "df199094-f97c-4b97-adc8-09d6bf9f94bb",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "IoRQxghif1RKjaKn",
+          "name": "openrounter"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=\n我们要写一篇关于 {{ $json.output.topic }}的文章;\n想出关于这个话题的10个有趣并且风骚点的想法，我们可以写一篇引人深思的\n800字文章。仅列出这10个想法或者思路，没有其他内容。\n\n请按照以下 JSON 格式输出：\n{\n  \"ideas\": [\n    \"想法1\",\n    \"想法2\",\n    \"想法3\",\n    \"想法4\",\n    \"想法5\",\n    \"想法6\",\n    \"想法7\",\n    \"想法8\",\n    \"想法9\",\n    \"想法10\"\n  ]\n}\n\n",
+        "hasOutputParser": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.5,
+      "position": [
+        160,
+        -200
+      ],
+      "id": "9a526309-8504-4690-8635-cfae21971256",
+      "name": "骚点子 💡"
+    },
+    {
+      "parameters": {
+        "model": "=gpt-4o-mini",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.1,
+      "position": [
+        520,
+        -20
+      ],
+      "id": "b8259c0a-80bd-4765-ade3-a6cb8a11e70a",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "IoRQxghif1RKjaKn",
+          "name": "openrounter"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"topic\": \"string\",  \n  \"title\": \"string\",  \n  \"core_arguments\": [\"string\"],  \n  \"persuasive_examples\": [  \n    {\n      \"argument\": \"string\"  \n    }\n  ],\n  \"*\": \"any\"  \n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        -40,
+        -20
+      ],
+      "id": "ab26cd46-27f7-4d1d-b1d0-7fd3e71c3274",
+      "name": "Structured Output Parser1"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n\t\"ideas\": [\"idea1\", \"idea2\", \"idea3\"]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        320,
+        0
+      ],
+      "id": "454ccc21-31a0-42f9-966b-65070c8ee9f3",
+      "name": "Structured Output Parser2"
+    },
+    {
+      "parameters": {
+        "model": "=gpt-4o-mini",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.1,
+      "position": [
+        140,
+        0
+      ],
+      "id": "d20586bd-ccf8-49fb-a7a2-738ca718f566",
+      "name": "OpenAI Chat Model2",
+      "credentials": {
+        "openAiApi": {
+          "id": "IoRQxghif1RKjaKn",
+          "name": "openrounter"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"大纲\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"观点\": {\n            \"type\": \"string\"\n          },\n          \"论据\": {\n            \"type\": \"array\",\n            \"items\": {\n              \"type\": \"string\"\n            }\n          }\n        },\n        \"required\": [\"观点\", \"论据\"]\n      }\n    }\n  },\n  \"required\": [\"大纲\"]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        740,
+        -20
+      ],
+      "id": "e6a20edd-1ddd-43c3-9244-738b00edb5a4",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "content": "吸引读者最关键的因素就是标题",
+        "height": 420,
+        "width": 360,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        880,
+        -280
+      ],
+      "id": "eae4c073-6e4a-4b71-83cc-c5e8a2544483",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=你是一位极具洞察力，同时极富思考能力的创意content creator.\n\n1请你仔细学习和思考范文，如何从主题{{ $('参考好文').item.json.output.title }}展开论点{{ $('参考好文').item.json.output.core_arguments }}以及服务论点的案例{{ $('参考好文').item.json.output.persuasive_examples }}\n2结合我们已经想出来{{ $json.output.ideas }}多种角度，同时要紧密联系我们的主题{{ $('参考好文').item.json.output.topic }}，新颖，独特有说服力的思路。\n3为主题{{ $('参考好文').item.json.output.topic }},撰写一个引人入胜、全面且可操作的大纲。，是其感兴趣想深入阅读。你可以适当想一些主题的反驳、批评和负面观点，最后能够引导读者加入阅读之后的分享。\n\n以 JSON 格式输出你的答案：\n1. 大纲——主要的观点\n2. 支持每条大纲的一些论据或实例\n\n注意：\n- 确保输出中没有 `/n` 符号。\n- 每条大纲和论据应清晰、简洁。",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        540,
+        -200
+      ],
+      "id": "e7afe77a-bd67-43a8-b430-127ed73b2e50",
+      "name": "AI Agent- 创意大师"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=请分析以下文本，并严格按照以下JSON格式输出：\n\n我们这次要写的topic：\n{\n  \"topic\": \"主题观点\"\n}\n\n我们参考文献的主题：\n{\n  \"title\": \"标题\",\n  \"core_arguments\": [\n    \"核心论点1\",\n    \"核心论点2\",\n    \"核心论点3\"\n  ],\n  \"persuasive_examples\": [\n    {\n      \"argument1\": \"论点1的例子1\"\n    },\n    {\n      \"argument2\": \"论点2的例子1\"\n    },\n    {\n      \"argument3\": \"论点3的例子1\"\n    }\n  ]\n}\n\n注意：\n1. 必须输出完整的两个JSON格式\n2. 论点:证明论点的例子 可以是 1:n\n\n文本内容：{{$json.message.text}}",
+        "hasOutputParser": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.5,
+      "position": [
+        -240,
+        -180
+      ],
+      "id": "6119a223-abbd-4c76-b8d7-ee5e32e27fa6",
+      "name": "参考好文"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=标题的主要目标是一下子拉近并吸引读者开始阅读文章。一个能让人产生兴趣去点击的标题是成功的一半。\n\n模仿并尝试超越下方引人入胜的标题示例列表，为我们的主题内容，大纲创建一个引人入胜的标题。\n\n1.震惊！99% 的人都不知道的 [突破性发现] 将颠覆 [领域] \n2.你绝对想不到！[看似普通的事物] 背后隐藏着 [惊人真相] \n3.警告！正在毁掉你 [渴望之物] 的 [隐藏陷阱]，速看！ \n4.一旦错过，终生遗憾！关于 [重要话题]，你必须知道的 [关键点] \n5.打破认知！原来我们一直都误解了 [常见现象]，真相是... \n6.内幕揭秘！[行业大佬] 不会告诉你的 [核心技巧/秘密]\n7.别再被骗了！[流行说法] 其实是 [彻头彻尾的谎言]\n8.颠覆认知！掌握这 [X 个技巧]，让你轻松拥有 [理想结果] \n9.告别无效努力！只需 [简单一步]，就能快速实现 [目标]\n10.从零到精通！这份 [终极指南] 将带你彻底掌握 [复杂技能]\n11.限时公开！[专家] 亲授，让你 [快速提升/解决难题] 的 [独门秘诀]\n12.逆袭必看！他们靠这 [X 个方法]，成功 [实现逆转/达成目标]\n13.解锁潜能！挖掘你 [内在能力]，轻松应对 [挑战]\n14.你敢挑战吗？学会这 [X 件事]，让你在 [领域] 脱颖而出\n15.是真的吗？[看似不可能的事情] 竟然真的可以做到，方法是...\n16.为什么 [普遍存在的问题] 如此难以解决？答案可能让你惊讶\n17.你真的了解 [重要概念] 吗？这 [X 个误区] 你可能也踩过 \n18.测测你的 [能力/认知]！这 [X 个问题] 看你能答对几个\n19.[你的专属福利]！这份 [实用清单/资源] 助你轻松搞定 [任务]\n20.一起来讨论！关于 [热门话题]，你的看法是什么？\n\n这是我们的主题：\n{{ $('参考好文').item.json.output.topic }}\n这是我们的大纲：\n{{ JSON.stringify ($json.output['大纲']) }}",
+        "hasOutputParser": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.5,
+      "position": [
+        940,
+        -200
+      ],
+      "id": "3d614a24-ade2-47f5-bb81-658b0ea640c7",
+      "name": "炸裂的标题💥"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.1,
+      "position": [
+        1300,
+        0
+      ],
+      "id": "74684463-7096-40b2-9990-2b6c1da08147",
+      "name": "OpenAI Chat Model4",
+      "credentials": {
+        "openAiApi": {
+          "id": "IoRQxghif1RKjaKn",
+          "name": "openrounter"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=以下是一篇关于爆款文章准备的标题和大纲：\ntitle:{{ JSON.stringify($json.output.titles) }}\noutline:{{ JSON.stringify ($('AI Agent- 创意大师').item.json.output['大纲']) }}\n\n撰写一篇约1000字的自媒体文章，目标读者为青年和中年群体。文章需围绕一个吸引人的主题展开，内容独特、信息丰富且易于阅读。具体要求如下：\n\n结构清晰：文章需包含5个主要部分，每个部分围绕一个核心点展开，逻辑流畅，前后呼应。\n\n语言风格：使用对话式、轻松随意的语言，避免过于正式或销售化的表达。少用术语，保持简洁明了。\n\nSEO优化：确保内容针对搜索引擎优化，合理使用关键词，但不要过度堆砌。\n\n实用性与吸引力：每个部分应提供有价值的信息，结合示例、实用技巧或故事，增强读者的参与感。\n\n节奏与可读性：段落简短，适当使用项目符号或小标题，避免长篇大论。确保文章节奏明快，易于阅读。\n\n原创性：内容必须完全原创，不得抄袭或复制其他来源。使用主动语态，增强文章的吸引力。\n\n行动号召：在文章结尾加入一个引人注目的行动号召，鼓励读者参与、分享或进一步探索。\n\n注意事项：\n\n避免使用销售口吻或公司术语。\n\n尽量减少冗长的描述，保持内容精炼。\n\n确保文章主题与目标读者的兴趣相关，内容具有实用性和启发性。\n\n输出格式：以Markdown格式撰写，便于阅读和排版。\n"
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.5,
+      "position": [
+        1320,
+        -200
+      ],
+      "id": "25e445bd-dc20-47cb-af05-e826310bde8a",
+      "name": "爆款文章 📈"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.1,
+      "position": [
+        920,
+        0
+      ],
+      "id": "e16232c4-4670-4bb2-9718-f95bcdc32f3b",
+      "name": "OpenAI Chat Model3",
+      "credentials": {
+        "openAiApi": {
+          "id": "IoRQxghif1RKjaKn",
+          "name": "openrounter"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"titles\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"text\": {\n            \"type\": \"string\"\n          }\n        },\n        \"required\": [\"text\"]\n      },\n      \"minItems\": 1\n    }\n  },\n  \"required\": [\"titles\"]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        1140,
+        0
+      ],
+      "id": "4f9d14c2-29ea-4f71-b200-0f50dab89043",
+      "name": "Structured Output Parser3"
+    },
+    {
+      "parameters": {
+        "content": "根据要写的标题，让大模型去准备文章的不同思路或者想法",
+        "height": 420,
+        "width": 340,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        120,
+        -280
+      ],
+      "id": "f6c8e6c5-0d7f-4fdc-961b-fbb7894cbcbb",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "AI Agent 根据所参照的好文章，内容以及模版。并结合已经生成的ideas思路。生成文章的脉络",
+        "height": 460,
+        "width": 340,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        500,
+        -320
+      ],
+      "id": "398abdaa-064d-4feb-827b-98d48d931098",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.text }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1660,
+        -200
+      ],
+      "id": "2d2fe255-95ee-4866-8c8b-be27875c374a",
+      "name": "Telegram",
+      "credentials": {
+        "telegramApi": {
+          "id": "qD5rcod7678XHFKV",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "帮我写一篇AI时代到来，我们如何做准备，请参考：AI 狂飙！扎克伯格预言 2025 软件开发巨变\n\n1 AI将快速渗透并主导软件开发\n\n扎克伯格的预测： 在2025年，Meta将拥有能像中级工程师一样编写代码的AI。\n\n那如果我们去稍加推演时间线： 如果2025年是中级水平，那么到2030年甚至2035年，会是怎么样的情形呢？大部分软件都可能由AI编写？\n\n同时代码生成方式的会不会带来转变： 未来的代码可能不再是我们熟悉的形式，而是根据需求实时生成？\n\n2 软件工程师的角色将发生转变，更注重创造性工作。\n小扎表示现在来看还稍微有点早但是从历史的借鉴(在采访时这个问题小扎犹豫几秒然后十分委婉的表示）： 就像农业自动化解放了大量劳动力一样，AI也将解放软件工程师，让他们从事更高级的工作。\n\n3 短期内可能存在摩擦和挑战\n我们前几天提到的Salesforce CEO马克·贝尼奥夫表示，由于AI带来的生产力提升（超过30%），Salesforce在2025年将不再招聘新的软件工程师。Salesforce虽然冻结了软件工程师的招聘，但计划增加销售人员，以推广其AI产品。这暗示着某些岗位的减少，另一些岗位的增加。\n**（或许听起来与人际关系相关的工作将是人工智能最后取代的东西？）\n\n如果你还没有亲身体验过人工智能编码的魔力，建议你可以抽出一点时间，不妨尝试一下像 Cursor 或 Windsurf 这样的工具。 它们或许会给你带来意想不到的惊喜，让你对未来的编程方式有全新的认识。(欢迎有什么问题都可以来交流）",
+        "height": 280,
+        "width": 1800,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -320,
+        -640
+      ],
+      "id": "b79fb278-bbaf-4865-824c-1ed16a2a749f",
+      "name": "Sticky Note4"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "参考好文",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "参考好文",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "骚点子 💡": {
+      "main": [
+        [
+          {
+            "node": "AI Agent- 创意大师",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent- 创意大师",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "参考好文",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser2": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "骚点子 💡",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "骚点子 💡",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent- 创意大师",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent- 创意大师": {
+      "main": [
+        [
+          {
+            "node": "炸裂的标题💥",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "参考好文": {
+      "main": [
+        [
+          {
+            "node": "骚点子 💡",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "炸裂的标题💥": {
+      "main": [
+        [
+          {
+            "node": "爆款文章 📈",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model4": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "爆款文章 📈",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "炸裂的标题💥",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser3": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "炸裂的标题💥",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "爆款文章 📈": {
+      "main": [
+        [
+          {
+            "node": "Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "e1779438-9364-4826-be96-753645f0a4a9",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "fca93d17c464f14ee379b1bb0062a82ae940768a367569de55700c19e1add117"
+  },
+  "id": "PK0w3y3om98bBUA9",
+  "tags": []
+}

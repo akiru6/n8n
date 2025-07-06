@@ -1,0 +1,416 @@
+{
+  "name": "财务助手-发票自动记录",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.1,
+      "position": [
+        400,
+        -400
+      ],
+      "id": "f7b75e99-9c03-4f23-9972-8c3ac4575015",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "IoRQxghif1RKjaKn",
+          "name": "openrounter"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "app_id",
+              "value": "cli_a7fe18cb70ee500c"
+            },
+            {
+              "name": "app_secret",
+              "value": "ks9Waoa0ZFkomd5uHgCFYdnBu1kk2F5w"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1100,
+        -840
+      ],
+      "id": "968cf8d1-4f03-4b00-844b-35d3655ede8f",
+      "name": "接入飞书"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.feishu.cn/open-apis/bitable/v1/apps/KFSpbtt7zav8F8sFPZ3caQ2BnOg/tables/tblRMk8yqHZSs6ib/records",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.tenant_access_token }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"fields\":{\n    \"Invoice_number\": \"{{ $('Code').item.json.invoice_number }}\",\n\"tax_number\": \"{{ $('Code').item.json.tax_number }}\",\n\"total_amount\": \"{{ $('Code').item.json.total_amount }}\",\n\"issue_date\": \"{{ $('Code').item.json.issue_date }}\"\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1240,
+        -840
+      ],
+      "id": "f6092522-6914-458b-91d7-58ea6053df09",
+      "name": "写入飞书表格"
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "id": "ca22e4d1-bf18-4071-9cf1-a1ac22283540",
+      "name": "提取",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        0,
+        -540
+      ]
+    },
+    {
+      "parameters": {
+        "text": "={{ $json.output }}",
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"invoice_date\": {\n      \"type\": \"string\",\n      \"format\": \"date\"\n    },\n    \"invoice_number\": {\n      \"type\": \"string\"\n    },\n    \"billed_to\": {\n      \"type\": \"string\"\n    },\n    \"total_amount\": {\n      \"type\": \"number\"\n    }\n  },\n  \"required\": [\"invoice_date\", \"invoice_number\", \"billed_to\", \"total_amount\"]\n}\n",
+        "options": {}
+      },
+      "id": "b0fccc43-87b5-48d4-af2c-b0c4642f1ff6",
+      "name": "解析发票信息",
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1,
+      "position": [
+        440,
+        -540
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }} ",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -200,
+        -540
+      ],
+      "id": "313c6248-40ae-4305-b11a-3818aab978a0",
+      "name": "下载Google Drive网盘发票",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "0dh8Qz5eFyzJF2NY",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "1rmfuTu--e-E3vBIZtmsR3hT-9Czdffw6",
+          "mode": "list",
+          "cachedResultName": "发票",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1rmfuTu--e-E3vBIZtmsR3hT-9Czdffw6"
+        },
+        "event": "fileCreated",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        -400,
+        -540
+      ],
+      "id": "3ebe6f22-d7e6-4074-ad0c-960bb659f7b6",
+      "name": "Google Drive(检测新文件)",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "0dh8Qz5eFyzJF2NY",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "158YbgwK_9AuCANuu9fDTJ038pkKYJL3Y73EFHg2sdE8",
+          "mode": "list",
+          "cachedResultName": "费用清单",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/158YbgwK_9AuCANuu9fDTJ038pkKYJL3Y73EFHg2sdE8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "发票",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/158YbgwK_9AuCANuu9fDTJ038pkKYJL3Y73EFHg2sdE8/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Invoice Date": "={{ $json.output.invoice_date }}",
+            "BIll To": "={{ $json.output.billed_to }}",
+            "Invoice Number": "={{ $json.output.invoice_number }}",
+            "Total Amount": "={{ $json.output.total_amount }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Invoice Date",
+              "displayName": "Invoice Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Invoice Number",
+              "displayName": "Invoice Number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "BIll To",
+              "displayName": "BIll To",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Total Amount",
+              "displayName": "Total Amount",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "bf26898d-52da-43fa-be1e-60cfdfe15e98",
+      "name": "写入“费用清单-发票页签”",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        860,
+        -540
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "pknL1Z7M99uPUXue",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "28504399-c43a-42c2-a7ba-bf0e447671e3",
+              "name": "output",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "acc3223c-85d2-4539-9ccb-bd0e6bc1dc56",
+      "name": "从发票提取需要的部分",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        200,
+        -540
+      ]
+    },
+    {
+      "parameters": {
+        "content": "发票自动记录流程",
+        "height": 240,
+        "width": 1580,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -500,
+        -600
+      ],
+      "id": "25ce801e-4c40-4ec6-b713-8e7b51953199",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "让大模型帮你生成即可：(prompt)根据得到的发票信息，你帮我生成一下JSON schema，我要有invoice date，invoice number，bill to， total amount，不需要hardcode的example",
+        "height": 100,
+        "width": 340
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        420,
+        -660
+      ],
+      "id": "38913716-8292-4cd9-bd63-ab6871e5ec01",
+      "name": "Sticky Note1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "解析发票信息",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "接入飞书": {
+      "main": [
+        [
+          {
+            "node": "写入飞书表格",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "提取": {
+      "main": [
+        [
+          {
+            "node": "从发票提取需要的部分",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "解析发票信息": {
+      "main": [
+        [
+          {
+            "node": "写入“费用清单-发票页签”",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "下载Google Drive网盘发票": {
+      "main": [
+        [
+          {
+            "node": "提取",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Drive(检测新文件)": {
+      "main": [
+        [
+          {
+            "node": "下载Google Drive网盘发票",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "从发票提取需要的部分": {
+      "main": [
+        [
+          {
+            "node": "解析发票信息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "834be6d4-490d-4baf-9e89-9013d9b8e913",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "fca93d17c464f14ee379b1bb0062a82ae940768a367569de55700c19e1add117"
+  },
+  "id": "RgyZTLmVLhP9Tk88",
+  "tags": []
+}
